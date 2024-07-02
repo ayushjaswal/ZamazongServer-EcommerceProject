@@ -29,17 +29,28 @@ export const login = async (req, res) => {
         name: decodedToken.name,
         profile: decodedToken.picture,
       };
-      const createUser = await user.create(values);
-      if (createUser) {
+      const existingUser = await user.findOne({ email: decodedToken.email });
+      if (!existingUser) {
+        const createUser = await user.create(values);
+        if (createUser) {
+          var loginToken = jwt.sign(values, process.env.JWT_SECRET, {});
+          res.cookie("token", loginToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict",
+          });
+          return res.status(201).json(values);
+        } else {
+          return res.status(401).json(false);
+        }
+      } else {
         var loginToken = jwt.sign(values, process.env.JWT_SECRET, {});
         res.cookie("token", loginToken, {
           httpOnly: true,
           secure: true,
           sameSite: "Strict",
         });
-        return res.status(201).json(values);
-      } else {
-        return res.status(401).json(false);
+        return res.status(201).json(existingUser);
       }
     }
   } catch (err) {
@@ -54,11 +65,10 @@ export const logout = (req, res) => {
       secure: true,
       sameSite: "Strict",
     });
-    console.log(req)
-    if(!req.cookies?.token){
+    console.log(req);
+    if (!req.cookies?.token) {
       return res.status(201).json(true);
-    }
-    else{
+    } else {
       return res.status(401).json(false);
     }
   } catch (err) {

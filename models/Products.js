@@ -1,11 +1,11 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema, model, modelNames } from "mongoose";
 
 const ProductSchema = new Schema({
-  title: {
+  productName: {
     type: String,
     required: true,
   },
-  description: {
+  productDescription: {
     type: String,
   },
   price: {
@@ -14,7 +14,7 @@ const ProductSchema = new Schema({
   },
   images: [
     {
-      type: String,
+      type: Object,
     },
   ],
   category: {
@@ -22,9 +22,11 @@ const ProductSchema = new Schema({
     ref: "Category",
     default: null,
   },
-  properties: {
-    type: Object
-  }
-});
+  properties: [
+    {
+      type: Object,
+    },
+  ],
+}, {timestamps: true});
 
-export const Product = models.Product || model("Product", ProductSchema);
+export const Product = modelNames?.Product || model("Product", ProductSchema);
