@@ -6,8 +6,10 @@ import connect from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import cookieParser from "cookie-parser";
-const port = process.env.PORT;
+import orderRoutes from "./routes/orderRoutes.js";
+const port = process.env.PORT ;
 
 app.use(cookieParser());
 dotenv.config();
@@ -22,18 +24,27 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(
-  cors({
-    credentials: true,
-    origin: process.env.HOST,
-  })
-);
+const allowedOrigins = [process.env.ADMINHOST, process.env.CLIENTHOST];
 
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
+
+app.use(cors(corsOptions));
 connect();
 
 app.use("/", authRoutes);
 app.use("/category", categoryRoutes);
-app.use("/product", productRoutes)
+app.use("/product", productRoutes);
+app.use("/order", orderRoutes);
+app.use("/review", reviewRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on ${port}`);
