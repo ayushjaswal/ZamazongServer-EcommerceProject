@@ -12,7 +12,7 @@ export const makePaymentInstance = async (req, res) => {
         price_data: {
           currency: "INR",
           product_data: { name: prod.product.productName },
-          unit_amount: prod.quantity * prod.product.price * 100,
+          unit_amount: prod.product.price * 100,
         },
       })
     );
@@ -20,6 +20,10 @@ export const makePaymentInstance = async (req, res) => {
       product: val.product._id,
       quantity: val.quantity,
     }));
+    const amount = cart.reduce(
+      (sum, product) => sum + product.product.price * product.quantity,
+      0
+    );
     const orderCreate = await Order.create({
       products: prodIds,
       customer: user._id,
@@ -28,12 +32,13 @@ export const makePaymentInstance = async (req, res) => {
       postalcode,
       country,
       paid: false,
+      totalAmount: amount,
     });
     const session = await stripe.checkout.sessions.create({
       line_items,
       mode: "payment",
       customer_email: user.email,
-      success_url: process.env.CLIENTHOST + "/orderSuccess",
+      success_url: process.env.CLIENTHOST + "/orderSuccess/" + orderCreate._id,
       cancel_url: process.env.CLIENTHOST + "/orderFailed",
       metadata: { orderId: orderCreate._id.toString() },
     });
@@ -44,4 +49,18 @@ export const makePaymentInstance = async (req, res) => {
   }
 
   //   const newOrder = await order;
+};
+
+export const getOrders = async (req, res) => {
+  try {
+    const getDb = await Order.find({});
+    if (getDb) {
+      return res.status(201).json(getDb);
+    } else {
+      return res.status(401).json(false);
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(false);
+  }
 };

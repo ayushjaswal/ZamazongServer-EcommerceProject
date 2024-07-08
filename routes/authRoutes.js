@@ -21,5 +21,5 @@ router.get("/logout", logout);
 router.post("/addtocart", addToCart);
 router.post("/removefromcart", removeFromCart);
 router.get("/get-cart", getCart);
-router.get("/clear-cart", clearUserCart);
+router.get("/clear-cart/:orderid", clearUserCart);
 export default router;

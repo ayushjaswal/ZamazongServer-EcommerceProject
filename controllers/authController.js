@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import jwt from "jsonwebtoken";
 import user from "../models/User.js";
+import { Order } from "../models/Order.js";
 
 export const getLogin = async (req, res) => {
   try {
@@ -197,12 +198,17 @@ export const getCart = async (req, res) => {
 
 export const clearUserCart = async (req, res) => {
   try {
+    const { orderid } = req.params;
     if (req.cookies?.token) {
       const values = jwtDecode(req.cookies.token);
       const getDb = await user.findOne({ _id: values._id });
       getDb.cart = [];
       await getDb.save();
-      if (getDb.cart.length == 0) {
+      const updateOrder = await Order.updateOne(
+        { _id: orderid },
+        { paid: true }
+      );
+      if (getDb.cart.length == 0 && updateOrder) {
         return res.status(201).json(true);
       } else {
         return res.status(401).json(false);

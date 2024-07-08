@@ -14,6 +14,7 @@ const orderSchema = new Schema(
     country: { type: String, required: true },
     postalcode: { type: String, required: true },
     paid: { type: Boolean, required: true },
+    totalAmount: { type: Number, required: true },
   },
   { timestamps: true }
 );

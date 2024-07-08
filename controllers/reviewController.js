@@ -29,10 +29,13 @@ export const deleteReview = async (req, res) => {
   try {
     const { id } = req.params;
     const getDb = await review.findOne({ _id: id });
-    const deleteProdRev = await Product.updateOne(
-      { _id: getDb.product },
-      { $pull: { review: id }, $dec: { reviewValue: getDb.stars } }
-    );
+    console.log(getDb)
+    if (getDb) {
+      const deleteProdRev = await Product.updateOne(
+        { _id: getDb.product },
+        { $pull: { review: id }, $inc: { reviewValue: -getDb.stars } }
+      );
+    }
     const deleteDb = await review.deleteOne({ _id: id });
     if (deleteDb) {
       return res.status(201).json(true);
