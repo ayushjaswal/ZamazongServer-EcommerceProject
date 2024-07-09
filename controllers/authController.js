@@ -181,41 +181,80 @@ export const removeFromCart = async (req, res) => {
 export const getCart = async (req, res) => {
   try {
     const { token } = req.cookies;
-    const { _id } = jwtDecode(token);
+
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = jwtDecode(token);
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const { _id } = decodedToken;
+
     const getDB = await user
       .findOne({ _id: _id })
       .populate({ path: "cart", populate: { path: "product" } });
+
     if (getDB) {
-      return res.status(201).json(getDB);
+      return res.status(200).json(getDB);
     } else {
-      return res.status(401).json(false);
+      return res.status(404).json({ message: "User not found" });
     }
   } catch (err) {
     console.log(err);
-    return res.status(500).json(false);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
 export const clearUserCart = async (req, res) => {
   try {
     const { orderid } = req.params;
-    if (req.cookies?.token) {
-      const values = jwtDecode(req.cookies.token);
-      const getDb = await user.findOne({ _id: values._id });
-      getDb.cart = [];
-      await getDb.save();
-      const updateOrder = await Order.updateOne(
-        { _id: orderid },
-        { paid: true }
-      );
-      if (getDb.cart.length == 0 && updateOrder) {
-        return res.status(201).json(true);
-      } else {
-        return res.status(401).json(false);
-      }
+
+    // Check if the token exists in cookies
+    const { token } = req.cookies;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    // Decode the token safely
+    let decodedToken;
+    try {
+      decodedToken = jwtDecode(token);
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const { _id } = decodedToken;
+
+    // Find the user by decoded token ID
+    const getDb = await user.findOne({ _id });
+    if (!getDb) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Clear the user's cart
+    getDb.cart = [];
+    await getDb.save();
+
+    // Update the order status
+    const updateOrder = await Order.updateOne({ _id: orderid }, { paid: true });
+
+    // Check if the cart is empty and the order was updated
+    if (getDb.cart.length === 0 && updateOrder.nModified > 0) {
+      return res
+        .status(200)
+        .json({ message: "Cart cleared and order updated successfully" });
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Failed to clear cart or update order" });
     }
   } catch (err) {
     console.log(err);
-    return res.status(500).json(false);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
