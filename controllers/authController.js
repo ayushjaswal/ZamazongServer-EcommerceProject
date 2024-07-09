@@ -17,9 +17,9 @@ export const getLogin = async (req, res) => {
           {}
         );
         res.cookie("token", loginToken, {
-          // httpOnly: true,
+          httpOnly: true,
           secure: true,
-          sameSite: "Strict",
+          sameSite: "None",
         });
       }
       return res.json(getDb);
@@ -56,9 +56,9 @@ export const login = async (req, res) => {
             {}
           );
           res.cookie("token", loginToken, {
-            // httpOnly: true,
+            httpOnly: true,
             secure: true,
-            sameSite: "Strict",
+            sameSite: "None",
           });
           return res.status(201).json(createUser);
         } else {
@@ -75,7 +75,7 @@ export const login = async (req, res) => {
         res.cookie("token", loginToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "Strict",
+          sameSite: "None",
         });
         return res.status(201).json(existingUser);
       }
